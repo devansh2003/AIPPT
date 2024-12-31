@@ -1,10 +1,11 @@
 import streamlit as st
 import cv2
-from aippt_utils import calculate_ippt_points, generate_chart, save_session, load_leaderboard
-from pose_detection import pose, detect_reps, mp_drawing, mp_pose
-import pandas as pd
-import os
 import time
+
+from streamlit import session_state
+
+import poseObject
+# from aippt_utils import calculate_ippt_points, generate_chart, save_session, load_leaderboard
 
 # Detection thresholds
 thresholds = {
@@ -15,7 +16,7 @@ thresholds = {
 }
 
 # Real-time repetition counter
-def workout_loop(video_feed, exercise, target_reps):
+def workout_loop(video_feed, exercise, target_reps, person):
     cap = cv2.VideoCapture(video_feed)
     count = 0
     stage = None
@@ -33,10 +34,10 @@ def workout_loop(video_feed, exercise, target_reps):
 
         # Process frame
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = pose.process(rgb_frame)
+        results = person.pose.process(rgb_frame)
 
         # Detect repetitions
-        count, stage = detect_reps(results, exercise, count, stage, thresholds)
+        count, stage = person.detect_reps(results, exercise, count, stage, thresholds)
 
         # Check if target is reached
         if count >= target_reps and not st.session_state[f"{exercise}_target_reached"]:
@@ -44,12 +45,12 @@ def workout_loop(video_feed, exercise, target_reps):
 
         # Draw landmarks
         if results.pose_landmarks:
-            mp_drawing.draw_landmarks(
+            person.mp_drawing.draw_landmarks(
                 frame,
                 results.pose_landmarks,
-                mp_pose.POSE_CONNECTIONS,
-                mp_drawing.DrawingSpec(color=(0, 255, 0), thickness=2),
-                mp_drawing.DrawingSpec(color=(0, 0, 255), thickness=2),
+                person.mp_pose.POSE_CONNECTIONS,
+                person.mp_drawing.DrawingSpec(color=(0, 255, 0), thickness=2),
+                person.mp_drawing.DrawingSpec(color=(0, 0, 255), thickness=2),
             )
 
         # Update UI elements
@@ -57,6 +58,19 @@ def workout_loop(video_feed, exercise, target_reps):
         stage_placeholder.markdown(f"### Stage: {stage.capitalize() if stage else 'N/A'}")
         if st.session_state[f"{exercise}_target_reached"]:
             feedback_placeholder.success("🎉 Target reps reached! Keep going or finish your workout.")
+
+            if 'end_pushup_btn' not in st.session_state and st.session_state["pushup_active"]:
+                # Finish Workout Button
+                st.button("Finish Workout", key="end_pushup_btn", on_click=end_workout,
+                          args=("pushup", count, person.name))
+                st.session_state.key = 'end_pushup_btn'
+            elif 'end_situp_btn' not in st.session_state and st.session_state["situp_active"]:
+                # Finish Workout Button
+                st.button("Finish Workout", key="end_situp_btn", on_click=end_workout,
+                          args=("situp", count, person.name))
+                st.session_state.key = 'end_situp_btn'
+            else:
+                pass
         else:
             feedback_placeholder.empty()
 
@@ -72,19 +86,21 @@ def workout_loop(video_feed, exercise, target_reps):
 def end_workout(exercise, count, name):
     st.session_state[f"{exercise}_active"] = False
     st.session_state[f"{exercise}_finish_clicked"] = True
-    save_session(name, exercise, count)
+    #save_session(name, exercise, count)
     st.success(f"Total {exercise.capitalize()} Counted: {count}")
 
 # Main application
 def main():
+    person = poseObject.Person()
+
     st.title("AIPPT - Advanced Individual Physical Proficiency Test")
     st.sidebar.header("Navigation")
 
     # User details
     st.sidebar.subheader("User Details")
-    name = st.sidebar.text_input("Enter your Name")
-    age = st.sidebar.number_input("Enter your Age", min_value=16, max_value=60, step=1)
-    if not name or not age:
+    person.name = st.sidebar.text_input("Enter your Name")
+    person.age = st.sidebar.number_input("Enter your Age", min_value=16, max_value=60, step=1)
+    if not person.name or not person.age:
         st.warning("Please enter your details to proceed.")
         return
 
@@ -119,10 +135,7 @@ def main():
         # Workout Feed and Always Visible Finish Button
         if st.session_state["pushup_active"]:
             # Run workout feed
-            count = workout_loop(0, "pushup", target_reps)
-
-            # Finish Workout Button
-            st.button("Finish Workout", key="finish_pushup_button", on_click=end_workout, args=("pushup", count, name))
+            count = workout_loop(0, "pushup", target_reps, person)
 
     # Sit-Up Training
     elif menu == "Train Situps":
@@ -138,10 +151,6 @@ def main():
         # Workout Feed and Always Visible Finish Button
         if st.session_state["situp_active"]:
             # Run workout feed
-            count = workout_loop(0, "situp", target_reps)
-
-            # Finish Workout Button
-            st.button("Finish Workout", key="finish_situp_button", on_click=end_workout, args=("situp", count, name))
-
+            count = workout_loop(0, "situp", target_reps, person)
 if __name__ == "__main__":
     main()
