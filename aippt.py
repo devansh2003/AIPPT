@@ -1,11 +1,9 @@
 import streamlit as st
 import cv2
 import time
-
-from streamlit import session_state
-
 import poseObject
 # from aippt_utils import calculate_ippt_points, generate_chart, save_session, load_leaderboard
+from calculator import display_ippt_calculator
 
 # Detection thresholds
 thresholds = {
@@ -152,5 +150,8 @@ def main():
         if st.session_state["situp_active"]:
             # Run workout feed
             count = workout_loop(0, "situp", target_reps, person)
+
+    elif menu == "IPPT Calculator":
+        display_ippt_calculator(person)
 if __name__ == "__main__":
     main()
