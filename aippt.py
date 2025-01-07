@@ -4,6 +4,7 @@ import time
 import poseObject
 from calculator import display_ippt_calculator
 from progress_tracker import display_progress
+from leaderboard import display_leaderboard
 
 # Detection thresholds
 thresholds = {
@@ -156,6 +157,9 @@ def main():
 
     elif menu == "Progress Tracker":
         display_progress(person)
+
+    elif menu == "Leaderboard":
+        display_leaderboard()
 
 if __name__ == "__main__":
     main()

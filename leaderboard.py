@@ -1,15 +1,14 @@
 import pandas as pd
 import streamlit as st
 
-def load_leaderboard(file_path="leaderboard.csv"):
+def load_leaderboard(file_path="progress.csv"):
     """
     Load leaderboard data from a CSV file.
     """
     try:
         return pd.read_csv(file_path)
     except FileNotFoundError:
-        return pd.DataFrame(columns=["Name", "Exercise", "Reps"])
-
+        return pd.DataFrame(columns=["Name", "Exercise", "Total Reps"])
 
 def display_leaderboard():
     """
@@ -25,7 +24,7 @@ def display_leaderboard():
         return
 
     # Display top performers by exercise
-    for exercise in ["pushup", "situp"]:
+    for exercise in ["Pushups", "Situps"]:
         st.markdown(f"#### {exercise.capitalize()} Leaderboard")
         exercise_data = leaderboard[leaderboard["Exercise"] == exercise]
         sorted_data = exercise_data.sort_values("Reps", ascending=False).head(10)
