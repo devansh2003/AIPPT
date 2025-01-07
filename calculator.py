@@ -109,16 +109,17 @@ def display_ippt_calculator(person):
             seconds = st.number_input("Seconds:", min_value=0, max_value=59, step=1)
     runTime = [minutes, seconds]
 
-    incentive = getIncentive(calculate_points(person, pushups, situps, runTime))
+    totalPoints = calculate_points(person, pushups, situps, runTime)
+    incentive = getIncentive(totalPoints)
     if incentive[2] == 0:
-        st.subheader("Fail")
+        st.subheader(f"Total Points: {totalPoints} - Fail")
     elif incentive[2] == 1:
-        st.subheader("Pass with no incentive")
+        st.subheader(f"Total Points: {totalPoints} - Pass with no incentive")
     elif incentive[2] == 2:
-        st.subheader("Pass with incentive: $200")
+        st.subheader(f"Total Points: {totalPoints} - Pass with incentive: $200")
     elif incentive[2] == 3:
-        st.subheader("Silver: $300")
+        st.subheader(f"Total Points: {totalPoints} - Silver: $300")
     elif incentive[2] == 4:
-        st.subheader("Gold: $500")
+        st.subheader(f"Total Points: {totalPoints} - Gold: $500")
     else:
         pass

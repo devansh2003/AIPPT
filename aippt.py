@@ -2,8 +2,8 @@ import streamlit as st
 import cv2
 import time
 import poseObject
-# from aippt_utils import calculate_ippt_points, generate_chart, save_session, load_leaderboard
 from calculator import display_ippt_calculator
+from progress_tracker import display_progress
 
 # Detection thresholds
 thresholds = {
@@ -153,5 +153,9 @@ def main():
 
     elif menu == "IPPT Calculator":
         display_ippt_calculator(person)
+
+    elif menu == "Progress Tracker":
+        display_progress(person)
+
 if __name__ == "__main__":
     main()
